@@ -1,0 +1,73 @@
+// Importējam nepieciešamās bibliotēkas
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const fs = require('fs');
+const app = require('../app'); // Vai nomaini uz ceļu uz savu servera failu
+
+chai.use(chaiHttp);
+const expect = chai.expect;
+
+describe('Contacts API', () => {
+    // Pirms testiem izdzēš kontaktu failu un izveido jaunu tukšu failu
+    before(() => {
+        fs.writeFileSync('contacts.json', '[]');
+    });
+
+    describe('GET /contacts', () => {
+        it('should return an empty array of contacts', (done) => {
+            chai.request(app)
+                .get('/contacts')
+                .end((err, res) => {
+                    if (err) {
+                        console.error(err);
+                        done(err);
+                        return;
+                    }
+                    expect(res).to.have.status(200);
+                    expect(res.body).to.be.an('array');
+                    expect(res.body).to.have.lengthOf(0);
+                    done();
+                });
+        });
+    });
+
+    describe('POST /contacts', () => {
+        it('should add a new contact', (done) => {
+            const newContact = {
+                name: 'John Doe',
+                phone: '123456789',
+                email: 'john@example.com'
+            };
+
+            chai.request(app)
+                .post('/contacts')
+                .send(newContact)
+                .end((err, res) => {
+                    if (err) {
+                        console.error(err);
+                        done(err);
+                        return;
+                    }
+                    expect(res).to.have.status(201);
+                    expect(res.text).to.equal('Kontakts pievienots veiksmīgi');
+                    done();
+                });
+        });
+
+        it('should return an array with one contact', (done) => {
+            chai.request(app)
+                .get('/contacts')
+                .end((err, res) => {
+                    if (err) {
+                        console.error(err);
+                        done(err);
+                        return;
+                    }
+                    expect(res).to.have.status(200);
+                    expect(res.body).to.be.an('array');
+                    expect(res.body).to.have.lengthOf(1);
+                    done();
+                });
+        });
+    });
+});
